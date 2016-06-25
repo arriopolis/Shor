@@ -26,6 +26,7 @@ unsigned int gcd(unsigned int a, unsigned int b)
 /* Calculcate the remainder of a power with positive offset */
 unsigned int remmod(unsigned int base, unsigned int exp, unsigned int offset, unsigned int mod)
 {
+	//Modular exponentiotion
 	unsigned int result = 1;
 	base %= mod;
 	while (exp != 0)
@@ -330,24 +331,35 @@ void Shor(SHORSTATS * results, unsigned int N, double epsilon, bool msg)
 	return;
 }
 
+/* Main program starts here */
 int main(int argc, char * argv[])
 {
+	//Check the input parameters
 	unsigned int N;
-	if (argc == 1) {N = 15;}
-	else if (argc == 2) {N = atoi(argv[1]);}
-	else {printf("Too many arguments supplied. Expected: ./Shor <Number to factor>.\n"); return 0;}
+	double epsilon;
+	if (argc == 1)
+	{
+		N = 15; printf("No number to factor is supplied, so the default value of 15 is used.\n");
+		epsilon = 0.2; printf("No accuracy parameter is supplied, so the default value of 0.2 is used.\n");
+	}
+	else if (argc == 2) {N = atoi(argv[1]); epsilon = 0.2; printf("No accuracy parameter is supplied, so the default value of 0.2 is used.\n");}
+	else if (argc == 3) {N = atoi(argv[1]); epsilon = atof(argv[2]);}
+	else {printf("Too many arguments supplied. Expected: ./Shor [<Number to factor>] [<Accuracy parameter>].\n"); return 0;}
 
+	//Set up the statistics
 	struct timeval start, stop, starttry, stoptry;
 	gettimeofday(&start,NULL);
 	SHORSTATS * results = malloc(sizeof(SHORSTATS));
 	unsigned int numtries = 0;
 	unsigned int numquantumtries = 0;
 	unsigned int preliminaryresult = 0;
+	
+	//Run the algorithm a maximum of 100 times
 	for (unsigned int i = 0; i < 100; i++)
 	{
 		numtries++;
 		gettimeofday(&starttry,NULL);
-		Shor(results,N,0.2,false);
+		Shor(results,N,epsilon,false);
 		gettimeofday(&stoptry,NULL);
 		if (results->errorcode == 0) {preliminaryresult = results->factor;}
 		if (results->quantum) {numquantumtries++;}
@@ -355,8 +367,10 @@ int main(int argc, char * argv[])
 	}
 	gettimeofday(&stop,NULL);
 	
+	//Display the results
 	if (results->quantum && results->errorcode == 0)
 	{
+		//The program succeeded
 		printf("The algorithm succesfully found a factor of %d using the order finding subroutine.\n",N);
 		printf("The factor that was found was %d.\n",results->factor);
 		printf("The number that was guessed was %d.\n",results->x);
@@ -368,6 +382,7 @@ int main(int argc, char * argv[])
 	}
 	else
 	{
+		//The program failed
 		printf("The program did not find a dividing factor of %d using the order finding subroutine after 100 tries.\n",N);
 		if (preliminaryresult == 0)
 		{
